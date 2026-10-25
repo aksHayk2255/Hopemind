@@ -8,6 +8,8 @@ __pycache__/
 *.db
 *.sqlite
 *.sqlite3
+*.env
+!*.env.example
 
 frontend/node_modules/.tmp/
 frontend/node_modules/.vite/

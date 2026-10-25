@@ -18,7 +18,7 @@ export const PrivacySettings: React.FC = () => {
   const { user, refreshUser } = useAuth();
 
   const [privacy, setPrivacy] = useState<UserPrivacyPreference>({
-    share_journal_with_doctor: true,
+    share_journal_with_doctor: false,
     share_mood_with_doctor: true,
     allow_nlp_analysis: true,
     email_notifications_enabled: true,

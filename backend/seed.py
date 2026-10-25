@@ -11,6 +11,7 @@ from app.models.notification import Notification
 from app.models.privacy import UserPrivacyPreference
 from app.models.ml_prediction import ModelPrediction
 from app.models.audit import AuditLog
+from app.models.collaboration import ClinicianVerification, CareConnection, DataConsent
 from app.services.epds_service import calculate_epds_score
 from app.services.nlp_service import analyze_journal_nlp
 from app.services.ml_service import predict_ppd_risk
@@ -57,6 +58,13 @@ def seed_database():
         )
         db.session.add(doc_profile)
         db.session.flush()
+        db.session.add(ClinicianVerification(
+            doctor_id=doc_profile.id,
+            status="verified",
+            qualifications="MD, Perinatal Psychiatry",
+            consultation_modes="video,in_person",
+            verified_at=datetime.utcnow(),
+        ))
 
         # 3. Mother 1: Priya Sharma (Improving postpartum journey)
         mother1_user = User(
@@ -147,6 +155,20 @@ def seed_database():
         )
         db.session.add(assign1)
         db.session.add(assign2)
+        connection1 = CareConnection(
+            mother_id=mother1_profile.id, doctor_id=doc_profile.id,
+            status="accepted", accepted_at=datetime.utcnow() - timedelta(days=30)
+        )
+        connection2 = CareConnection(
+            mother_id=mother2_profile.id, doctor_id=doc_profile.id,
+            status="accepted", accepted_at=datetime.utcnow() - timedelta(days=20)
+        )
+        db.session.add_all([connection1, connection2])
+        db.session.add_all([
+            DataConsent(mother_id=mother1_profile.id, doctor_id=doc_profile.id, category="assessments", status="granted", purpose="Share EPDS screening history with this clinician.", granted_at=datetime.utcnow() - timedelta(days=30)),
+            DataConsent(mother_id=mother1_profile.id, doctor_id=doc_profile.id, category="mood", status="granted", purpose="Share mood and wellness trends with this clinician.", granted_at=datetime.utcnow() - timedelta(days=30)),
+            DataConsent(mother_id=mother2_profile.id, doctor_id=doc_profile.id, category="assessments", status="granted", purpose="Share EPDS screening history with this clinician.", granted_at=datetime.utcnow() - timedelta(days=20)),
+        ])
         db.session.flush()
 
         print("[Seed] Creating assessments...")

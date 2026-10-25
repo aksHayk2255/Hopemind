@@ -30,6 +30,8 @@ const motherLinks = [
   { to: '/mother', label: 'Dashboard', icon: Activity },
   { to: '/mother/assessment', label: 'Screening', icon: Heart },
   { to: '/mother/mood', label: 'Mood & Wellness', icon: Smile },
+  { to: '/mother/care-team', label: 'Care team', icon: Users },
+  { to: '/mother/appointments', label: 'Appointments', icon: CalendarCheck },
   { to: '/mother/chat', label: 'HopeBot', icon: MessageCircleHeart },
   { to: '/mother/settings', label: 'Settings', icon: Shield },
 ];

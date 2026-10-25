@@ -17,6 +17,8 @@ import { MoodTrends } from './components/mother/MoodTrends';
 import { HopeBotChat } from './components/mother/HopeBotChat';
 import { PrivacySettings } from './components/mother/PrivacySettings';
 import { StaffDashboard } from './components/staff/StaffDashboard';
+import { CareTeam } from './components/mother/CareTeam';
+import { Appointments } from './components/mother/Appointments';
 
 function Home() {
   const { user } = useAuth();
@@ -81,7 +83,10 @@ function AppShell() {
         <Route path="/mother/trends" element={<ProtectedRoute allowedRoles={['mother']}><MoodTrends /></ProtectedRoute>} />
         <Route path="/mother/chat" element={<ProtectedRoute allowedRoles={['mother']}><HopeBotChat onOpenEmergency={openEmergency} /></ProtectedRoute>} />
         <Route path="/mother/settings" element={<ProtectedRoute allowedRoles={['mother']}><PrivacySettings /></ProtectedRoute>} />
+        <Route path="/mother/care-team" element={<ProtectedRoute allowedRoles={['mother']}><CareTeam /></ProtectedRoute>} />
+        <Route path="/mother/appointments" element={<ProtectedRoute allowedRoles={['mother']}><Appointments /></ProtectedRoute>} />
         <Route path="/doctor/*" element={<ProtectedRoute allowedRoles={['doctor']}><StaffDashboard role="doctor" /></ProtectedRoute>} />
+        <Route path="/clinician/*" element={<ProtectedRoute allowedRoles={['doctor']}><StaffDashboard role="doctor" /></ProtectedRoute>} />
         <Route path="/admin/*" element={<ProtectedRoute allowedRoles={['admin']}><StaffDashboard role="admin" /></ProtectedRoute>} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

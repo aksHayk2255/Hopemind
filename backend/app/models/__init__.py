@@ -8,6 +8,14 @@ from app.models.notification import Notification
 from app.models.audit import AuditLog
 from app.models.ml_prediction import ModelPrediction
 from app.models.privacy import UserPrivacyPreference
+from app.models.collaboration import (
+    ClinicianVerification,
+    CareConnection,
+    DataConsent,
+    Appointment,
+    ClinicalNote,
+    Referral,
+)
 
 __all__ = [
     "User",
@@ -23,5 +31,11 @@ __all__ = [
     "Notification",
     "AuditLog",
     "ModelPrediction",
-    "UserPrivacyPreference"
+    "UserPrivacyPreference",
+    "ClinicianVerification",
+    "CareConnection",
+    "DataConsent",
+    "Appointment",
+    "ClinicalNote",
+    "Referral",
 ]

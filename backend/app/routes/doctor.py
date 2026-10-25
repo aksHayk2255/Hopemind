@@ -8,6 +8,7 @@ from app.models.assessment import Assessment
 from app.models.mood import MoodEntry
 from app.models.follow_up import FollowUp
 from app.models.notification import Notification
+from app.models.collaboration import DataConsent
 from app.security.rbac import role_required, verify_mother_access
 from app.services.audit_service import log_audit_event
 
@@ -41,9 +42,12 @@ def get_assigned_patients():
             if not (match_name or match_email):
                 continue
 
-        # Fetch latest assessment
+        can_view_assessments = DataConsent.query.filter_by(
+            mother_id=mother.id, doctor_id=user.doctor_profile.id,
+            category="assessments", status="granted"
+        ).first() is not None
         latest_assessment = Assessment.query.filter_by(mother_id=mother.id)\
-            .order_by(Assessment.created_at.desc()).first()
+            .order_by(Assessment.created_at.desc()).first() if can_view_assessments else None
 
         # Check screening category filter
         if filter_category and latest_assessment:
@@ -113,18 +117,23 @@ def get_patient_detail(mother_id):
 
     mother_user = mother.user
 
-    # Assessments
+    can_view_assessments = DataConsent.query.filter_by(
+        mother_id=mother.id, doctor_id=user.doctor_profile.id,
+        category="assessments", status="granted"
+    ).first() is not None
+    can_view_mood = DataConsent.query.filter_by(
+        mother_id=mother.id, doctor_id=user.doctor_profile.id,
+        category="mood", status="granted"
+    ).first() is not None
     assessments = Assessment.query.filter_by(mother_id=mother.id)\
-        .order_by(Assessment.created_at.desc()).all()
-
-    # Mood records
+        .order_by(Assessment.created_at.desc()).all() if can_view_assessments else []
     moods = MoodEntry.query.filter_by(mother_id=mother.id)\
-        .order_by(MoodEntry.entry_date.desc()).limit(20).all()
+        .order_by(MoodEntry.entry_date.desc()).limit(20).all() if can_view_mood else []
 
     # Check privacy setting for journals
+    # Journal text is never included in the collaboration API. It remains private
+    # even when a mother shares mood and wellness trends.
     allow_journal = False
-    if mother_user.privacy_preferences and mother_user.privacy_preferences.share_journal_with_doctor:
-        allow_journal = True
 
     # Follow-ups
     follow_ups = FollowUp.query.filter_by(mother_id=mother.id)\

@@ -66,6 +66,9 @@ def create_app(config_name=None):
     app.register_blueprint(ml_bp, url_prefix="/api/ml")
     app.register_blueprint(notifications_bp, url_prefix="/api/notifications")
     app.register_blueprint(user_bp, url_prefix="/api/user")
+    @app.route('/')
+    def root():
+        return jsonify({"status":"healthy","service":"HopeMind API"}), 200
 
     @app.route("/api/health")
     def health_check():

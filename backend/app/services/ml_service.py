@@ -12,13 +12,29 @@ def get_model_artifact():
     if MODEL_CACHE is not None:
         return MODEL_CACHE
 
-    model_path = current_app.config.get("ML_MODEL_PATH")
+    model_path = None
+    try:
+        from flask import current_app, has_app_context
+        if has_app_context():
+            model_path = current_app.config.get("ML_MODEL_PATH")
+    except Exception:
+        pass
+
+    if not model_path:
+        default_path = Path(__file__).resolve().parent.parent.parent.parent / "ml" / "models" / "ppd_risk_model.joblib"
+        model_path = os.environ.get("ML_MODEL_PATH", default_path)
+
     if model_path and Path(model_path).exists():
         try:
             MODEL_CACHE = joblib.load(model_path)
             return MODEL_CACHE
         except Exception as e:
-            current_app.logger.warning(f"Could not load ML artifact from {model_path}: {e}")
+            try:
+                from flask import current_app, has_app_context
+                if has_app_context():
+                    current_app.logger.warning(f"Could not load ML artifact from {model_path}: {e}")
+            except Exception:
+                pass
 
     return None
 
@@ -54,7 +70,9 @@ def predict_ppd_risk(
         feature_names = artifact.get("feature_names", list(features_dict.keys()))
         input_vector = [features_dict[name] for name in feature_names]
         
-        prob = float(model.predict_proba([input_vector])[0][1])
+        import pandas as pd
+        input_df = pd.DataFrame([input_vector], columns=feature_names)
+        prob = float(model.predict_proba(input_df)[0][1])
         model_version = artifact.get("version", "1.0.0-academic")
         model_name = artifact.get("model_name", "RandomForestClassifier")
     else:
@@ -123,12 +141,18 @@ def predict_ppd_risk(
             "clinical_relevance": "Support, rest, and screening scores are within favorable parameters"
         })
 
+    disclaimer_text = "This machine learning estimate is strictly for academic research demonstration and educational decision-support. It is NOT a validated medical device and must never substitute for a licensed healthcare provider's clinical judgment."
+
     return {
         "predicted_risk_score": round(prob, 3),
+        "probability": round(prob, 3),
         "predicted_category": category,
+        "category": category,
         "clinical_guidance": guidance,
+        "guidance": guidance,
         "model_name": model_name,
         "model_version": model_version,
         "top_features": top_features,
-        "disclaimer": "This machine learning estimate is strictly for academic research demonstration and educational decision-support. It is NOT a validated medical device and must never substitute for a licensed healthcare provider's clinical judgment."
+        "top_contributing_features": top_features,
+        "disclaimer": disclaimer_text
     }

@@ -1,17 +1,95 @@
-@import "tailwindcss/base";
-@import "tailwindcss/components";
-@import "tailwindcss/utilities";
-
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import "tailwindcss";
 
 @layer base {
+  :root {
+    --color-lavender-50: #f5f3ff;
+    --color-lavender-100: #e9e5ff;
+    --color-lavender-200: #d6d0ff;
+    --color-lavender-300: #b9b0ff;
+    --color-lavender-400: #978bff;
+    --color-lavender-500: #7567f5;
+    --color-lavender-600: #5b4bdb;
+    --color-lavender-700: #4938b9;
+    --color-lavender-800: #382b91;
+    --color-lavender-900: #281f6d;
+
+    --color-teal-50: #fff3f1;
+    --color-teal-100: #ffe2de;
+    --color-teal-200: #ffc4bd;
+    --color-teal-300: #ff9f95;
+    --color-teal-400: #f77a70;
+    --color-teal-500: #e85d55;
+    --color-teal-600: #c94743;
+    --color-teal-700: #a93638;
+    --color-teal-800: #852d32;
+    --color-teal-900: #68262d;
+
+    --color-warm-50: #fffaf8;
+    --color-warm-100: #fff2ef;
+    --color-warm-200: #ffe3de;
+    --color-warm-300: #f8c9c2;
+    --color-warm-400: #d99c96;
+    --color-warm-500: #b97773;
+    --color-warm-800: #4d292b;
+    --color-warm-900: #321b20;
+
+    --color-navy-50: #f5f4ff;
+    --color-navy-100: #e8e7f7;
+    --color-navy-200: #cbc9e6;
+    --color-navy-300: #a9a6cc;
+    --color-navy-400: #817eb0;
+    --color-navy-500: #625f94;
+    --color-navy-600: #4d4a7c;
+    --color-navy-700: #3c3963;
+    --color-navy-800: #292746;
+    --color-navy-900: #1f1d36;
+    --color-navy-950: #141326;
+
+    --color-rose-50: #fff3f1;
+    --color-rose-100: #ffe2de;
+    --color-rose-200: #ffc4bd;
+    --color-rose-300: #ff9f95;
+    --color-rose-400: #f77a70;
+    --color-rose-500: #e85d55;
+    --color-rose-600: #c94743;
+    --color-rose-700: #a93638;
+  }
+
   body {
-    @apply bg-warm-50 text-navy-900 font-sans antialiased selection:bg-lavender-200 selection:text-navy-900;
+    background:
+      radial-gradient(circle at 8% 0%, rgba(214, 208, 255, 0.52), transparent 28rem),
+      radial-gradient(circle at 95% 18%, rgba(255, 196, 189, 0.38), transparent 26rem),
+      #fffaf8;
+    color: #1f1d36;
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
     min-height: 100vh;
   }
 
-  h1, h2, h3, h4, h5, h6 {
-    @apply text-navy-900 font-semibold tracking-tight;
+  button,
+  a,
+  input,
+  textarea,
+  select {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  button:not(:disabled),
+  a {
+    transition: transform 180ms ease, box-shadow 180ms ease, background-color 180ms ease, border-color 180ms ease;
+  }
+
+  button:not(:disabled):active,
+  a:active {
+    transform: scale(0.98);
+  }
+
+  button:focus-visible,
+  a:focus-visible,
+  input:focus-visible,
+  textarea:focus-visible,
+  select:focus-visible {
+    outline: 3px solid rgba(159, 109, 248, 0.38);
+    outline-offset: 2px;
   }
 }
 
@@ -26,24 +104,46 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #ccd8e8;
+  background: #cbc9e6;
   border-radius: 9999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #a3bad4;
-}
-
-/* Clean accessible focus ring */
-*:focus-visible {
-  outline: 2px solid #8748ed;
-  outline-offset: 2px;
+  background: #a9a6cc;
 }
 
 /* Glassmorphism utility card */
 .glass-card {
-  background: rgba(255, 255, 255, 0.85);
+  background: rgba(255, 255, 255, 0.88);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border: 1px solid rgba(226, 232, 240, 0.8);
+}
+
+.subtle-gradient {
+  background:
+  radial-gradient(circle at 12% 18%, rgba(185, 176, 255, 0.55), transparent 22rem),
+  radial-gradient(circle at 88% 75%, rgba(255, 159, 149, 0.32), transparent 24rem),
+  linear-gradient(135deg, #fffaf8 0%, #f5f3ff 50%, #fff3f1 100%);
+}
+
+.interactive-card {
+  transition: transform 220ms ease, box-shadow 220ms ease, border-color 220ms ease;
+}
+
+.interactive-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(159, 109, 248, 0.42);
+  box-shadow: 0 18px 42px rgba(78, 37, 145, 0.12);
+}
+
+.chat-message-user {
+  background: linear-gradient(135deg, #5b4bdb 0%, #4938b9 100%);
+  box-shadow: 0 8px 20px rgba(73, 56, 185, 0.2);
+}
+
+.chat-message-assistant {
+  border-color: rgba(255, 196, 189, 0.95);
+  background: linear-gradient(135deg, #ffffff 0%, #fff3f1 100%);
+  box-shadow: 0 8px 20px rgba(201, 71, 67, 0.08);
 }

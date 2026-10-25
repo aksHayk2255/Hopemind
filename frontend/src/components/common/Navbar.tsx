@@ -1,22 +1,22 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
-  Heart,
-  Shield,
   Activity,
-  Smile,
-  MessageCircleHeart,
-  TrendingUp,
-  Settings,
-  Users,
-  LogOut,
   Bell,
+  CalendarCheck,
   ChevronDown,
+  Heart,
+  LogOut,
+  Menu,
+  MessageCircleHeart,
+  Shield,
+  Smile,
+  TrendingUp,
   UserCheck,
-  CheckCircle2,
-  CalendarCheck
+  Users,
+  X,
 } from 'lucide-react';
-import { useAuth, DEMO_ACCOUNTS } from '../../context/AuthContext';
+import { useAuth } from '../../context/AuthContext';
 import { userService } from '../../services/userService';
 import { NotificationItem } from '../../types';
 
@@ -24,380 +24,150 @@ interface NavbarProps {
   onOpenEmergency: () => void;
 }
 
+type DemoAccount = 'mother_priya' | 'mother_ananya' | 'doctor' | 'admin';
+
+const motherLinks = [
+  { to: '/mother', label: 'Dashboard', icon: Activity },
+  { to: '/mother/assessment', label: 'Screening', icon: Heart },
+  { to: '/mother/mood', label: 'Mood & Wellness', icon: Smile },
+  { to: '/mother/chat', label: 'HopeBot', icon: MessageCircleHeart },
+  { to: '/mother/settings', label: 'Settings', icon: Shield },
+];
+
 export const Navbar: React.FC<NavbarProps> = ({ onOpenEmergency }) => {
   const { user, logout, quickDemoLogin } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
-
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
-  const [unreadCount, setUnreadCount] = useState<number>(0);
-  const [showNotifs, setShowNotifs] = useState<boolean>(false);
-  const [showDemoMenu, setShowDemoMenu] = useState<boolean>(false);
-  const notifRef = useRef<HTMLDivElement>(null);
-  const demoRef = useRef<HTMLDivElement>(null);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [openMenu, setOpenMenu] = useState<'notifications' | 'profile' | 'demo' | 'mobile' | null>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!user) return;
-    const fetchNotifs = async () => {
+    if (!user) {
+      setNotifications([]);
+      setUnreadCount(0);
+      return;
+    }
+
+    const fetchNotifications = async () => {
       try {
-        const res = await userService.getNotifications();
-        if (res && res.notifications) {
-          setNotifications(res.notifications);
-          setUnreadCount(res.notifications.filter((n) => !n.is_read).length);
+        const response = await userService.getNotifications();
+        if (response?.notifications) {
+          setNotifications(response.notifications);
+          setUnreadCount(response.notifications.filter((item) => !item.is_read).length);
         }
-      } catch (err) {
-        // Silently catch in dev
+      } catch (error) {
+        console.error('Unable to load notifications', error);
       }
     };
-    fetchNotifs();
+
+    fetchNotifications();
   }, [user, location.pathname]);
 
-  // Click outside listener for dropdowns
   useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (notifRef.current && !notifRef.current.contains(e.target as Node)) {
-        setShowNotifs(false);
-      }
-      if (demoRef.current && !demoRef.current.contains(e.target as Node)) {
-        setShowDemoMenu(false);
+    const closeMenus = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setOpenMenu(null);
       }
     };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setOpenMenu(null);
+    };
+    document.addEventListener('mousedown', closeMenus);
+    document.addEventListener('keydown', closeOnEscape);
+    return () => {
+      document.removeEventListener('mousedown', closeMenus);
+      document.removeEventListener('keydown', closeOnEscape);
+    };
   }, []);
 
-  const handleDemoSwitch = async (key: 'mother_priya' | 'mother_ananya' | 'doctor' | 'admin') => {
-    setShowDemoMenu(false);
-    const loggedUser = await quickDemoLogin(key);
-    if (loggedUser.role === 'mother') {
-      navigate('/mother');
-    } else if (loggedUser.role === 'doctor') {
-      navigate('/doctor');
-    } else if (loggedUser.role === 'admin') {
-      navigate('/admin');
-    }
+  const isActive = (path: string) =>
+    location.pathname === path || (path !== '/mother' && location.pathname.startsWith(`${path}/`));
+
+  const homePath = user
+    ? user.role === 'mother'
+      ? '/mother'
+      : user.role === 'doctor'
+        ? '/doctor'
+        : '/admin'
+    : '/';
+
+  const handleDemoSwitch = async (account: DemoAccount) => {
+    setOpenMenu(null);
+    const loggedUser = await quickDemoLogin(account);
+    navigate(loggedUser.role === 'mother' ? '/mother' : loggedUser.role === 'doctor' ? '/doctor' : '/admin');
   };
 
   const handleMarkAsRead = async (id: number) => {
     try {
       await userService.markNotificationRead(id);
-      setNotifications((prev) =>
-        prev.map((n) => (n.id === id ? { ...n, is_read: true } : n))
+      setNotifications((current) =>
+        current.map((notification) => (notification.id === id ? { ...notification, is_read: true } : notification)),
       );
-      setUnreadCount((c) => Math.max(0, c - 1));
-    } catch (e) {
-      console.error(e);
+      setUnreadCount((current) => Math.max(0, current - 1));
+    } catch (error) {
+      console.error('Unable to mark notification as read', error);
     }
   };
 
-  const isActive = (path: string) => location.pathname === path;
+  const linkClass = (path: string) =>
+    `inline-flex min-h-11 items-center gap-2 rounded-xl px-3 py-2 text-xs font-semibold transition-colors ${
+      isActive(path)
+        ? 'bg-[#f5f3ff] text-[#382b91] shadow-sm'
+        : 'text-slate-600 hover:bg-slate-50 hover:text-[#141326]'
+    }`;
 
   return (
-    <header className="sticky top-0 z-40 border-b border-[#e8e7f7] bg-white/95 shadow-sm backdrop-blur-md transition-all">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
-          {/* Brand Logo */}
-          <div className="flex items-center gap-3">
-            <Link to={user ? (user.role === 'mother' ? '/mother' : user.role === 'doctor' ? '/doctor' : '/admin') : '/'} className="flex items-center gap-2.5 group">
-              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-tr from-[#4938b9] via-[#5b4bdb] to-[#e85d55] shadow-lg transition-transform group-hover:scale-105">
-                <Heart className="w-5 h-5 text-white fill-white/20" />
-              </div>
-              <div>
-                <span className="bg-gradient-to-r from-[#141326] via-[#4938b9] to-[#a93638] bg-clip-text text-xl font-bold tracking-tight text-transparent">
-                  HopeMind
-                </span>
-                <span className="ml-2 hidden rounded-full border border-[#d6d0ff] bg-[#f5f3ff] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-[#382b91] sm:inline-block">
-                  Perinatal AI Care
-                </span>
-              </div>
-            </Link>
-          </div>
+    <header className="sticky top-0 z-40 border-b border-[#e8e7f7] bg-white/95 backdrop-blur-md">
+      <div ref={menuRef} className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="flex min-h-[4.25rem] items-center justify-between gap-3">
+          <Link to={homePath} className="flex min-w-0 items-center gap-2.5" aria-label="HopeMind home">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-[#5b4bdb] shadow-sm">
+              <Heart className="h-5 w-5 fill-white/20 text-white" />
+            </span>
+            <span className="min-w-0">
+              <span className="block truncate text-xl font-bold tracking-tight text-[#141326]">HopeMind</span>
+              <span className="hidden text-[10px] font-semibold uppercase tracking-[0.16em] text-[#5b4bdb] sm:block">
+                Perinatal AI Care
+              </span>
+            </span>
+          </Link>
 
-          {/* Navigation Links based on user role */}
-          {user && (
-            <nav className="hidden md:flex items-center space-x-1 lg:space-x-2">
-              {user.role === 'mother' && (
-                <>
-                  <Link
-                    to="/mother"
-                    className={`px-3 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-colors ${
-                      isActive('/mother')
-                        ? 'bg-lavender-100 text-lavender-900'
-                        : 'text-slate-600 hover:text-navy-900 hover:bg-slate-100'
-                    }`}
-                  >
-                    <Activity className="w-3.5 h-3.5" />
-                    Dashboard
-                  </Link>
-                  <Link
-                    to="/mother/assessment"
-                    className={`px-3 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-colors ${
-                      isActive('/mother/assessment')
-                        ? 'bg-lavender-100 text-lavender-900'
-                        : 'text-slate-600 hover:text-navy-900 hover:bg-slate-100'
-                    }`}
-                  >
-                    <Heart className="w-3.5 h-3.5 text-rose-500" />
-                    EPDS Screening
-                  </Link>
-                  <Link
-                    to="/mother/mood"
-                    className={`px-3 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-colors ${
-                      isActive('/mother/mood')
-                        ? 'bg-lavender-100 text-lavender-900'
-                        : 'text-slate-600 hover:text-navy-900 hover:bg-slate-100'
-                    }`}
-                  >
-                    <Smile className="w-3.5 h-3.5 text-teal-600" />
-                    Daily Mood
-                  </Link>
-                  <Link
-                    to="/mother/trends"
-                    className={`px-3 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-colors ${
-                      isActive('/mother/trends')
-                        ? 'bg-lavender-100 text-lavender-900'
-                        : 'text-slate-600 hover:text-navy-900 hover:bg-slate-100'
-                    }`}
-                  >
-                    <TrendingUp className="w-3.5 h-3.5 text-indigo-600" />
-                    Wellness Trends
-                  </Link>
-                  <Link
-                    to="/mother/chat"
-                    className={`px-3 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-colors ${
-                      isActive('/mother/chat')
-                        ? 'bg-lavender-100 text-lavender-900'
-                        : 'text-slate-600 hover:text-navy-900 hover:bg-slate-100'
-                    }`}
-                  >
-                    <MessageCircleHeart className="w-3.5 h-3.5 text-lavender-600" />
-                    HopeBot Chat
-                  </Link>
-                  <Link
-                    to="/mother/settings"
-                    className={`px-3 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-colors ${
-                      isActive('/mother/settings')
-                        ? 'bg-lavender-100 text-lavender-900'
-                        : 'text-slate-600 hover:text-navy-900 hover:bg-slate-100'
-                    }`}
-                  >
-                    <Settings className="w-3.5 h-3.5" />
-                    Settings
-                  </Link>
-                </>
-              )}
-
-              {user.role === 'doctor' && (
-                <>
-                  <Link
-                    to="/doctor"
-                    className={`px-3 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-colors ${
-                      isActive('/doctor')
-                        ? 'bg-teal-100 text-teal-900'
-                        : 'text-slate-600 hover:text-navy-900 hover:bg-slate-100'
-                    }`}
-                  >
-                    <Activity className="w-3.5 h-3.5" />
-                    Clinical Dashboard
-                  </Link>
-                  <Link
-                    to="/doctor/patients"
-                    className={`px-3 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-colors ${
-                      isActive('/doctor/patients')
-                        ? 'bg-teal-100 text-teal-900'
-                        : 'text-slate-600 hover:text-navy-900 hover:bg-slate-100'
-                    }`}
-                  >
-                    <Users className="w-3.5 h-3.5 text-teal-600" />
-                    Patient Directory
-                  </Link>
-                  <Link
-                    to="/doctor/follow-ups"
-                    className={`px-3 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-colors ${
-                      isActive('/doctor/follow-ups')
-                        ? 'bg-teal-100 text-teal-900'
-                        : 'text-slate-600 hover:text-navy-900 hover:bg-slate-100'
-                    }`}
-                  >
-                    <CalendarCheck className="w-3.5 h-3.5 text-indigo-600" />
-                    Follow-Ups
-                  </Link>
-                </>
-              )}
-
-              {user.role === 'admin' && (
-                <>
-                  <Link
-                    to="/admin"
-                    className={`px-3 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-colors ${
-                      isActive('/admin')
-                        ? 'bg-purple-100 text-purple-900'
-                        : 'text-slate-600 hover:text-navy-900 hover:bg-slate-100'
-                    }`}
-                  >
-                    <Activity className="w-3.5 h-3.5" />
-                    Platform KPIs
-                  </Link>
-                  <Link
-                    to="/admin/users"
-                    className={`px-3 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-colors ${
-                      isActive('/admin/users')
-                        ? 'bg-purple-100 text-purple-900'
-                        : 'text-slate-600 hover:text-navy-900 hover:bg-slate-100'
-                    }`}
-                  >
-                    <Users className="w-3.5 h-3.5 text-purple-600" />
-                    User Accounts
-                  </Link>
-                  <Link
-                    to="/admin/audit"
-                    className={`px-3 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-colors ${
-                      isActive('/admin/audit')
-                        ? 'bg-purple-100 text-purple-900'
-                        : 'text-slate-600 hover:text-navy-900 hover:bg-slate-100'
-                    }`}
-                  >
-                    <Shield className="w-3.5 h-3.5 text-teal-600" />
-                    Audit Logs
-                  </Link>
-                </>
-              )}
-            </nav>
-          )}
-
-          {/* Right Action Controls */}
-          <div className="flex items-center gap-2 sm:gap-3">
-            {/* 1-Click Demo Switcher (Awesome for viva & inspection) */}
-            <div className="relative" ref={demoRef}>
-              <button
-                onClick={() => setShowDemoMenu(!showDemoMenu)}
-                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-medium bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 transition-colors"
-                title="Switch demo profile quickly"
-              >
-                <UserCheck className="w-3.5 h-3.5 text-lavender-600" />
-                <span className="hidden sm:inline">Demo Switcher</span>
-                <ChevronDown className="w-3 h-3 text-slate-400" />
-              </button>
-
-              {showDemoMenu && (
-                <div className="absolute right-0 mt-2 w-72 rounded-2xl bg-white shadow-modal border border-slate-200 p-2 z-50 animate-fadeIn">
-                  <div className="px-3 py-1.5 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
-                    Instant Demo Login
-                  </div>
-                  <button
-                    onClick={() => handleDemoSwitch('mother_priya')}
-                    className="w-full text-left p-2 rounded-xl hover:bg-lavender-50 transition-colors flex items-center gap-2.5"
-                  >
-                    <div className="w-7 h-7 rounded-lg bg-lavender-100 text-lavender-700 flex items-center justify-center font-bold text-xs shrink-0">
-                      PS
-                    </div>
-                    <div>
-                      <p className="text-xs font-semibold text-slate-800">Priya Sharma</p>
-                      <p className="text-[11px] text-slate-500">Mother (Standard / Normal Risk)</p>
-                    </div>
-                  </button>
-
-                  <button
-                    onClick={() => handleDemoSwitch('mother_ananya')}
-                    className="w-full text-left p-2 rounded-xl hover:bg-rose-50 transition-colors flex items-center gap-2.5"
-                  >
-                    <div className="w-7 h-7 rounded-lg bg-rose-100 text-rose-700 flex items-center justify-center font-bold text-xs shrink-0">
-                      AP
-                    </div>
-                    <div>
-                      <p className="text-xs font-semibold text-slate-800">Ananya Patel</p>
-                      <p className="text-[11px] text-rose-600 font-medium">Mother (High Risk • Q10 Flag)</p>
-                    </div>
-                  </button>
-
-                  <button
-                    onClick={() => handleDemoSwitch('doctor')}
-                    className="w-full text-left p-2 rounded-xl hover:bg-teal-50 transition-colors flex items-center gap-2.5"
-                  >
-                    <div className="w-7 h-7 rounded-lg bg-teal-100 text-teal-700 flex items-center justify-center font-bold text-xs shrink-0">
-                      DR
-                    </div>
-                    <div>
-                      <p className="text-xs font-semibold text-slate-800">Dr. Sunita Sharma</p>
-                      <p className="text-[11px] text-slate-500">Perinatal Psychiatrist</p>
-                    </div>
-                  </button>
-
-                  <button
-                    onClick={() => handleDemoSwitch('admin')}
-                    className="w-full text-left p-2 rounded-xl hover:bg-purple-50 transition-colors flex items-center gap-2.5"
-                  >
-                    <div className="w-7 h-7 rounded-lg bg-purple-100 text-purple-700 flex items-center justify-center font-bold text-xs shrink-0">
-                      AD
-                    </div>
-                    <div>
-                      <p className="text-xs font-semibold text-slate-800">Administrator</p>
-                      <p className="text-[11px] text-slate-500">System & ML Governance</p>
-                    </div>
-                  </button>
-                </div>
-              )}
-            </div>
-
-            {/* Emergency SOS Button */}
-            <button
-              onClick={onOpenEmergency}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-rose-500 hover:bg-rose-600 active:scale-95 text-white shadow-soft transition-all"
-              title="24/7 Crisis Helplines"
-            >
-              <Shield className="w-3.5 h-3.5" />
-              <span>SOS Help</span>
-            </button>
-
-            {/* Notifications Dropdown (if logged in) */}
+          <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
             {user && (
-              <div className="relative" ref={notifRef}>
+              <div className="relative">
                 <button
-                  onClick={() => setShowNotifs(!showNotifs)}
-                  className="relative p-2 rounded-xl text-slate-600 hover:text-navy-900 hover:bg-slate-100 transition-colors"
-                  title="Notifications"
+                  type="button"
+                  onClick={() => setOpenMenu(openMenu === 'notifications' ? null : 'notifications')}
+                  className="relative flex h-11 w-11 items-center justify-center rounded-xl text-slate-600 hover:bg-slate-50 hover:text-[#141326]"
+                  aria-label={`Notifications${unreadCount ? `, ${unreadCount} unread` : ''}`}
+                  aria-expanded={openMenu === 'notifications'}
                 >
-                  <Bell className="w-4 h-4" />
-                  {unreadCount > 0 && (
-                    <span className="absolute top-1 right-1 w-2.5 h-2.5 rounded-full bg-rose-500 ring-2 ring-white animate-pulse" />
-                  )}
+                  <Bell className="h-[18px] w-[18px]" />
+                  {unreadCount > 0 && <span className="absolute right-2 top-2 h-2.5 w-2.5 rounded-full bg-rose-500 ring-2 ring-white" />}
                 </button>
-
-                {showNotifs && (
-                  <div className="absolute right-0 mt-2 w-80 rounded-2xl bg-white shadow-modal border border-slate-200 p-3 z-50 animate-fadeIn">
-                    <div className="flex items-center justify-between pb-2 border-b border-slate-100 mb-2">
+                {openMenu === 'notifications' && (
+                  <div className="absolute right-0 mt-2 w-[min(20rem,calc(100vw-2rem))] rounded-2xl border border-slate-200 bg-white p-3 shadow-xl">
+                    <div className="mb-2 flex items-center justify-between border-b border-slate-100 pb-2">
                       <span className="text-xs font-bold text-slate-800">Notifications</span>
-                      {unreadCount > 0 && (
-                        <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-rose-100 text-rose-700">
-                          {unreadCount} new
-                        </span>
-                      )}
+                      {unreadCount > 0 && <span className="text-[10px] font-semibold text-rose-600">{unreadCount} new</span>}
                     </div>
-                    <div className="space-y-2 max-h-64 overflow-y-auto">
+                    <div className="max-h-64 space-y-2 overflow-y-auto">
                       {notifications.length === 0 ? (
-                        <p className="text-xs text-slate-400 text-center py-4">No notifications yet</p>
+                        <p className="py-4 text-center text-xs text-slate-400">No notifications yet</p>
                       ) : (
-                        notifications.map((notif) => (
-                          <div
-                            key={notif.id}
-                            className={`p-2.5 rounded-xl border text-xs transition-colors ${
-                              notif.is_read
-                                ? 'bg-slate-50/60 border-slate-100 text-slate-600'
-                                : 'bg-lavender-50 border-lavender-200 text-slate-800 font-medium'
-                            }`}
-                          >
-                            <div className="flex items-start justify-between gap-1">
-                              <p className="font-semibold">{notif.title}</p>
-                              {!notif.is_read && (
-                                <button
-                                  onClick={() => handleMarkAsRead(notif.id)}
-                                  className="text-[10px] text-lavender-700 hover:underline shrink-0"
-                                >
+                        notifications.map((notification) => (
+                          <div key={notification.id} className="rounded-xl border border-slate-100 bg-slate-50/60 p-2.5 text-xs">
+                            <div className="flex items-start justify-between gap-2">
+                              <p className="font-semibold text-slate-800">{notification.title}</p>
+                              {!notification.is_read && (
+                                <button type="button" onClick={() => handleMarkAsRead(notification.id)} className="shrink-0 text-[10px] text-[#5b4bdb] hover:underline">
                                   Read
                                 </button>
                               )}
                             </div>
-                            <p className="text-[11px] text-slate-600 mt-0.5">{notif.message}</p>
+                            <p className="mt-0.5 text-[11px] text-slate-600">{notification.message}</p>
                           </div>
                         ))
                       )}
@@ -407,44 +177,145 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenEmergency }) => {
               </div>
             )}
 
-            {/* User Profile & Logout */}
-            {user ? (
-              <div className="flex items-center gap-2 pl-1 border-l border-slate-200">
-                <div className="text-right hidden lg:block">
-                  <div className="text-xs font-semibold text-slate-900 leading-tight">
-                    {user.full_name}
-                  </div>
-                  <div className="text-[10px] font-medium text-slate-500 capitalize">
-                    {user.role}
-                  </div>
-                </div>
-
+            {user && (
+              <div className="relative">
                 <button
-                  onClick={logout}
-                  className="p-2 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors"
-                  title="Sign Out"
+                  type="button"
+                  onClick={() => setOpenMenu(openMenu === 'profile' ? null : 'profile')}
+                  className="flex min-h-11 items-center gap-2 rounded-xl px-2 text-left hover:bg-slate-50"
+                  aria-label="Open profile menu"
+                  aria-expanded={openMenu === 'profile'}
                 >
-                  <LogOut className="w-4 h-4" />
+                  <span className="hidden text-right sm:block">
+                    <span className="block max-w-32 truncate text-xs font-semibold text-slate-900">{user.full_name}</span>
+                    <span className="block text-[10px] capitalize text-slate-500">{user.role}</span>
+                  </span>
+                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#f5f3ff] text-xs font-bold text-[#5b4bdb]">
+                    {user.full_name.slice(0, 1).toUpperCase()}
+                  </span>
+                  <ChevronDown className="hidden h-4 w-4 text-slate-400 sm:block" />
                 </button>
+                {openMenu === 'profile' && (
+                  <div className="absolute right-0 mt-2 w-52 rounded-2xl border border-slate-200 bg-white p-2 shadow-xl">
+                    <p className="px-3 py-2 text-xs font-semibold text-slate-800">{user.full_name}</p>
+                    {user.role === 'mother' && (
+                      <Link to="/mother/settings" onClick={() => setOpenMenu(null)} className="block rounded-xl px-3 py-2 text-xs text-slate-600 hover:bg-slate-50">
+                        Privacy & account settings
+                      </Link>
+                    )}
+                    <button type="button" onClick={logout} className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-xs font-semibold text-rose-600 hover:bg-rose-50">
+                      <LogOut className="h-3.5 w-3.5" /> Sign out
+                    </button>
+                  </div>
+                )}
               </div>
-            ) : (
-              <div className="flex items-center gap-2">
-                <Link
-                  to="/login"
-                  className="inline-flex items-center justify-center rounded-xl border border-lavender-200 bg-lavender-50 px-4 py-2 text-xs font-bold text-lavender-800 shadow-sm transition-colors hover:bg-lavender-100"
-                >
+            )}
+
+            <button
+              type="button"
+              onClick={onOpenEmergency}
+              className="inline-flex min-h-11 items-center gap-1.5 rounded-xl bg-[#e85d55] px-2.5 text-xs font-bold text-white hover:bg-[#c94743] sm:px-3"
+              aria-label="Open emergency support"
+            >
+              <Shield className="h-4 w-4" />
+              <span className="hidden sm:inline">SOS Help</span>
+            </button>
+
+            {!user && (
+              <div className="flex items-center gap-1.5 sm:gap-2">
+                <Link to="/login" className="whitespace-nowrap rounded-xl border border-[#d6d0ff] bg-[#f5f3ff] px-2.5 py-2 text-xs font-bold text-[#382b91] hover:bg-[#e9e5ff] sm:px-3.5">
                   Login
                 </Link>
-                <Link
-                  to="/register"
-                  className="px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-lavender-600 hover:bg-lavender-700 text-white shadow-soft transition-colors"
-                >
+                <Link to="/register" className="whitespace-nowrap rounded-xl bg-[#5b4bdb] px-2.5 py-2 text-xs font-bold text-white hover:bg-[#4938b9] sm:px-3.5">
                   Register
                 </Link>
               </div>
             )}
+
+            {user && (
+              <button
+                type="button"
+                onClick={() => setOpenMenu(openMenu === 'demo' ? null : 'demo')}
+                className="hidden h-11 items-center gap-1.5 rounded-xl border border-slate-200 px-2.5 text-xs font-semibold text-slate-600 hover:bg-slate-50 lg:flex"
+                aria-label="Open demo account menu"
+                aria-expanded={openMenu === 'demo'}
+              >
+                <UserCheck className="h-4 w-4 text-[#5b4bdb]" /> Demo <ChevronDown className="h-3 w-3" />
+              </button>
+            )}
+
+            {user?.role === 'mother' && (
+              <button
+                type="button"
+                onClick={() => setOpenMenu(openMenu === 'mobile' ? null : 'mobile')}
+                className="flex h-11 w-11 items-center justify-center rounded-xl text-slate-700 hover:bg-slate-50 md:hidden"
+                aria-label="Open navigation menu"
+                aria-expanded={openMenu === 'mobile'}
+              >
+                {openMenu === 'mobile' ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+              </button>
+            )}
           </div>
         </div>
+
+        {openMenu === 'demo' && (
+          <div className="absolute right-4 mt-1 w-64 rounded-2xl border border-slate-200 bg-white p-2 shadow-xl sm:right-6 lg:right-8">
+            {([
+              ['mother_priya', 'Priya Sharma', 'Mother (Normal)'],
+              ['mother_ananya', 'Ananya Patel', 'Mother (High Risk)'],
+              ['doctor', 'Dr. Sunita Sharma', 'Perinatal Psychiatrist'],
+              ['admin', 'Administrator', 'AI Governance'],
+            ] as [DemoAccount, string, string][]).map(([account, name, description]) => (
+              <button key={account} type="button" onClick={() => handleDemoSwitch(account)} className="flex w-full items-center gap-2 rounded-xl p-2 text-left hover:bg-slate-50">
+                <UserCheck className="h-4 w-4 shrink-0 text-[#5b4bdb]" />
+                <span><span className="block text-xs font-semibold text-slate-800">{name}</span><span className="block text-[10px] text-slate-500">{description}</span></span>
+              </button>
+            ))}
+          </div>
+        )}
+
+        {user?.role === 'mother' && (
+          <nav aria-label="Primary navigation" className="hidden items-center gap-1 overflow-x-auto border-t border-slate-100 py-2 md:flex">
+            {motherLinks.map(({ to, label, icon: Icon }) => (
+              <Link key={to} to={to} className={linkClass(to)} aria-current={isActive(to) ? 'page' : undefined}>
+                <Icon className="h-[17px] w-[17px]" />
+                <span className="whitespace-nowrap">{label}</span>
+              </Link>
+            ))}
+            <Link to="/mother/trends" className={`ml-auto ${linkClass('/mother/trends')}`}>
+              <TrendingUp className="h-[17px] w-[17px]" /> <span className="whitespace-nowrap">Wellness Trends</span>
+            </Link>
+          </nav>
+        )}
+
+        {user?.role === 'doctor' && (
+          <nav aria-label="Clinical navigation" className="hidden items-center gap-1 overflow-x-auto border-t border-slate-100 py-2 md:flex">
+            <Link to="/doctor" className={linkClass('/doctor')}><Activity className="h-[17px] w-[17px]" /> Clinical Dashboard</Link>
+            <Link to="/doctor/patients" className={linkClass('/doctor/patients')}><Users className="h-[17px] w-[17px]" /> Patient Directory</Link>
+            <Link to="/doctor/follow-ups" className={linkClass('/doctor/follow-ups')}><CalendarCheck className="h-[17px] w-[17px]" /> Follow-Ups</Link>
+          </nav>
+        )}
+
+        {user?.role === 'admin' && (
+          <nav aria-label="Administration navigation" className="hidden items-center gap-1 overflow-x-auto border-t border-slate-100 py-2 md:flex">
+            <Link to="/admin" className={linkClass('/admin')}><Activity className="h-[17px] w-[17px]" /> Platform KPIs</Link>
+            <Link to="/admin/users" className={linkClass('/admin/users')}><Users className="h-[17px] w-[17px]" /> User Accounts</Link>
+            <Link to="/admin/audit" className={linkClass('/admin/audit')}><Shield className="h-[17px] w-[17px]" /> Audit Logs</Link>
+          </nav>
+        )}
+
+        {user?.role === 'mother' && openMenu === 'mobile' && (
+          <nav aria-label="Mobile navigation" className="border-t border-slate-100 py-2 md:hidden">
+            {motherLinks.map(({ to, label, icon: Icon }) => (
+              <Link key={to} to={to} onClick={() => setOpenMenu(null)} className={`w-full ${linkClass(to)}`} aria-current={isActive(to) ? 'page' : undefined}>
+                <Icon className="h-[17px] w-[17px]" /> {label}
+              </Link>
+            ))}
+            <Link to="/mother/trends" onClick={() => setOpenMenu(null)} className={`w-full ${linkClass('/mother/trends')}`}>
+              <TrendingUp className="h-[17px] w-[17px]" /> Wellness Trends
+            </Link>
+          </nav>
+        )}
       </div>
     </header>
   );

@@ -37,7 +37,7 @@ function Home() {
             HopeMind brings screening, daily mood tracking, an empathetic AI companion, and care-team coordination into one private space.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
-            <Link to={destination} className="inline-flex items-center gap-2 rounded-2xl bg-lavender-600 px-5 py-3 text-sm font-bold text-white shadow-lg shadow-lavender-200 transition hover:bg-lavender-700">
+            <Link to={destination} className="inline-flex items-center gap-2 rounded-2xl bg-[#5b4bdb] px-5 py-3 text-sm font-bold text-white shadow-lg shadow-[#d6d0ff] transition hover:bg-[#4938b9]">
               {user ? 'Open my dashboard' : 'Login'}
               <ArrowRight className="h-4 w-4" />
             </Link>

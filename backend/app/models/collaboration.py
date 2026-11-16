@@ -44,6 +44,7 @@ class CareConnection(db.Model):
         return {
             "id": self.id,
             "mother_id": self.mother_id,
+            "mother_name": self.mother.user.full_name if self.mother and self.mother.user else None,
             "doctor_id": self.doctor_id,
             "doctor_name": doctor.full_name if doctor else None,
             "doctor_email": doctor.email if doctor else None,

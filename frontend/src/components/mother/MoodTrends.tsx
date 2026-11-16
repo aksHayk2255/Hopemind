@@ -23,6 +23,7 @@ import {
 } from 'recharts';
 import { moodService } from '../../services/moodService';
 import { MoodEntry } from '../../types';
+import { WeeklyWellnessReport } from './WeeklyWellnessReport';
 
 export const MoodTrends: React.FC = () => {
   const [days, setDays] = useState<number>(14);
@@ -295,6 +296,9 @@ export const MoodTrends: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Weekly Wellness Report (PDF Generation & Preview) */}
+      <WeeklyWellnessReport />
     </div>
   );
 };

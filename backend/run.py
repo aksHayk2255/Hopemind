@@ -9,6 +9,6 @@ if __name__ == "__main__":
         db.create_all()
         print("[HopeMind] Database initialized.")
         
-    port = int(os.environ.get("PORT", 5000))
+    port = int(os.environ.get("PORT", 5001))
     print(f"[HopeMind Backend] Server starting at http://127.0.0.1:{port}")
     app.run(host="0.0.0.0", port=port, debug=True)

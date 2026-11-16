@@ -235,3 +235,104 @@ export interface NotificationItem {
   is_read: boolean;
   created_at: string;
 }
+
+export interface WeeklyReportMetadata {
+  mother_id: number;
+  mother_name: string;
+  infant_name: string;
+  weeks_postpartum: number;
+  start_date: string;
+  end_date: string;
+  start_date_display: string;
+  end_date_display: string;
+  period_display: string;
+  generation_date: string;
+  total_days: number;
+  entries_count: number;
+  has_data: boolean;
+}
+
+export interface WeeklyReportMood {
+  average_score: number | null;
+  state_label: string;
+  distribution: Record<string, number>;
+  entries_count: number;
+}
+
+export interface WeeklyReportSleep {
+  average_hours: number | null;
+  min_hours: number | null;
+  max_hours: number | null;
+  records_count: number;
+}
+
+export interface WeeklyReportEnergy {
+  predominant_level: string;
+  distribution: Record<string, number>;
+}
+
+export interface WeeklyReportJournal {
+  entries_with_journal: number;
+  recurring_themes: Record<string, number>;
+}
+
+export interface EPDSAssessmentSummary {
+  id: number;
+  total_score: number;
+  screening_category: string;
+  question_10_flag: boolean;
+  clinical_action_recommended: string;
+  created_at: string;
+}
+
+export interface WeeklyReportEPDS {
+  latest: EPDSAssessmentSummary | null;
+  previous: EPDSAssessmentSummary | null;
+  comparison: string;
+}
+
+export interface WeeklyReportDailyRecord {
+  id: number;
+  date: string;
+  date_display: string;
+  day_name: string;
+  mood: string;
+  mood_display: string;
+  mood_score: number;
+  sleep_hours: number | null;
+  energy_level: string;
+  dominant_emotion: string;
+  has_journal: boolean;
+}
+
+export interface WeeklyReportRecommendation {
+  category: string;
+  detail: string;
+}
+
+export interface AssignedDoctorInfo {
+  doctor_id: number;
+  name: string;
+  specialization: string;
+  hospital: string;
+  email: string;
+}
+
+export interface WeeklyReportData {
+  metadata: WeeklyReportMetadata;
+  mood: WeeklyReportMood;
+  sleep: WeeklyReportSleep;
+  energy: WeeklyReportEnergy;
+  journal: WeeklyReportJournal;
+  epds: WeeklyReportEPDS;
+  daily_records: WeeklyReportDailyRecord[];
+  wellness_summary: string;
+  recommendations: WeeklyReportRecommendation[];
+  doctor_info: AssignedDoctorInfo | null;
+}
+
+export interface WeeklyReportPreviewResponse {
+  report: WeeklyReportData;
+  has_data: boolean;
+}
+

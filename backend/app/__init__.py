@@ -57,6 +57,7 @@ def create_app(config_name=None):
     from app.routes.notifications import notifications_bp
     from app.routes.user import user_bp
     from app.routes.collaboration import collaboration_bp
+    from app.routes.reports import reports_bp
 
     app.register_blueprint(auth_bp, url_prefix="/api/auth")
     app.register_blueprint(assessment_bp, url_prefix="/api/assessments")
@@ -68,6 +69,7 @@ def create_app(config_name=None):
     app.register_blueprint(notifications_bp, url_prefix="/api/notifications")
     app.register_blueprint(user_bp, url_prefix="/api/user")
     app.register_blueprint(collaboration_bp, url_prefix="/api/collaboration")
+    app.register_blueprint(reports_bp, url_prefix="/api/reports")
     @app.route('/')
     def root():
         return jsonify({"status":"healthy","service":"HopeMind API"}), 200

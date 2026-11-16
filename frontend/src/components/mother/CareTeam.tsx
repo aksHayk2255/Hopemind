@@ -48,6 +48,16 @@ export function CareTeam() {
     }
   };
 
+  const revoke = async (connectionId: number) => {
+    try {
+      await collaborationService.updateConnection(connectionId, 'revoke');
+      setMessage('Care-team connection revoked. Future sharing is now blocked.');
+      await load();
+    } catch {
+      setMessage('Unable to revoke this connection. Please try again.');
+    }
+  };
+
   return (
     <main className="mx-auto w-full max-w-7xl flex-1 space-y-8 px-4 py-8 sm:px-6 lg:px-8">
       <header>
@@ -71,7 +81,8 @@ export function CareTeam() {
               </div>
               <p className="mt-4 text-sm text-slate-500">{professional.biography || 'Verified HopeMind care professional.'}</p>
               <p className="mt-3 text-xs text-slate-500">{professional.hospital_affiliation || 'Independent practice'} · {professional.verification.consultation_modes.join(', ')}</p>
-              <button disabled={!!connection && ['pending', 'accepted'].includes(connection.status)} onClick={() => void request(professional.doctor_id)} className="mt-4 w-full rounded-xl bg-[#5b4bdb] px-4 py-2.5 text-sm font-bold text-white disabled:cursor-not-allowed disabled:bg-slate-300">{connection?.status === 'accepted' ? 'Connected' : connection?.status === 'pending' ? 'Request pending' : 'Request connection'}</button>
+              <button disabled={!!connection && ['pending', 'accepted'].includes(connection.status)} onClick={() => void request(professional.doctor_id)} className="mt-4 w-full rounded-xl bg-[#5b4bdb] px-4 py-2.5 text-sm font-bold text-white disabled:cursor-not-allowed disabled:bg-slate-300">{connection?.status === 'accepted' ? 'Connected' : connection?.status === 'pending' ? 'Request pending' : connection?.status === 'declined' ? 'Request again' : 'Request connection'}</button>
+              {connection?.status === 'accepted' && <button type="button" onClick={() => void revoke(connection.id)} className="mt-2 w-full rounded-xl border border-rose-200 px-4 py-2 text-xs font-bold text-rose-700">Disconnect care team</button>}
             </article>;
           })}
         </div>
@@ -82,6 +93,8 @@ export function CareTeam() {
         <div className="mt-4 space-y-3">{connections.filter((item) => item.status === 'accepted').map((connection) => (
           <div key={connection.id} className="rounded-xl border border-slate-100 bg-slate-50 p-4"><p className="font-semibold text-slate-800">{connection.doctor_name}</p><div className="mt-3 grid gap-2 sm:grid-cols-3">{categories.map((category) => { const granted = consents.some((item) => item.doctor_id === connection.doctor_id && item.category === category.key && item.status === 'granted'); return <button key={category.key} type="button" title={category.description} onClick={() => void toggleConsent(connection.doctor_id, category.key)} className={`rounded-lg border px-3 py-2 text-left text-xs font-semibold ${granted ? 'border-teal-200 bg-teal-50 text-teal-800' : 'border-slate-200 bg-white text-slate-600'}`}>{granted ? '✓ ' : ''}{category.label}</button>; })}</div></div>
         ))}</div>
+        {connections.some((item) => item.status === 'pending') && <p className="mt-4 text-xs text-amber-700">Pending requests are waiting for the clinician to review them.</p>}
+        {connections.some((item) => item.status === 'accepted') === false && <p className="mt-4 text-sm text-slate-500">Once a clinician accepts your request, sharing controls will appear here.</p>}
       </section>
     </main>
   );

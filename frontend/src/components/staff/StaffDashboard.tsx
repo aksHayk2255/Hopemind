@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Activity, AlertTriangle, CalendarCheck, Search, Users } from 'lucide-react';
+import { Activity, AlertTriangle, CalendarCheck, Check, Search, Users, X } from 'lucide-react';
 import { adminService, AuditLogEntry, PlatformStatistics, SystemUser } from '../../services/adminService';
 import { doctorService, DoctorPatientItem } from '../../services/doctorService';
-import { collaborationService, Appointment } from '../../services/collaborationService';
+import { collaborationService, Appointment, CareConnection } from '../../services/collaborationService';
 
 type StaffRole = 'doctor' | 'admin';
 const formatDate = (value?: string) => value ? new Date(value).toLocaleDateString() : '—';
@@ -17,6 +17,7 @@ export function StaffDashboard({ role }: { role: StaffRole }) {
   const [users, setUsers] = useState<SystemUser[]>([]);
   const [auditLogs, setAuditLogs] = useState<AuditLogEntry[]>([]);
   const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [connections, setConnections] = useState<CareConnection[]>([]);
   const [query, setQuery] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
@@ -38,6 +39,9 @@ export function StaffDashboard({ role }: { role: StaffRole }) {
             const result = await adminService.getStats();
             if (active) setStats(result.platform_statistics);
           }
+        } else if (section === 'connections') {
+          const result = await collaborationService.getConnections();
+          if (active) setConnections(result.connections);
         } else if (section === 'appointments') {
           const result = await collaborationService.getAppointments();
           if (active) setAppointments(result.appointments);
@@ -60,7 +64,7 @@ export function StaffDashboard({ role }: { role: StaffRole }) {
 
   const title = isAdmin
     ? (section === 'users' ? 'User accounts' : section === 'audit' ? 'Audit logs' : 'Platform overview')
-    : (section === 'patients' ? 'Patient directory' : section === 'appointments' ? 'Appointments' : section === 'follow-ups' ? 'Follow-up care' : 'Clinical dashboard');
+    : (section === 'patients' ? 'Patient directory' : section === 'connections' ? 'Connection requests' : section === 'appointments' ? 'Appointments' : section === 'follow-ups' ? 'Follow-up care' : 'Clinical dashboard');
 
   return (
     <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-8 sm:px-6 lg:px-8">
@@ -78,7 +82,7 @@ export function StaffDashboard({ role }: { role: StaffRole }) {
         )}
       </div>
       {error && <div className="mb-6 rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">{error}</div>}
-      {loading ? <div className="rounded-2xl bg-white p-10 text-center text-sm text-slate-500">Loading workspace…</div> : isAdmin ? <AdminContent section={section} stats={stats} users={users} auditLogs={auditLogs} /> : <DoctorContent section={section} patients={patients} appointments={appointments} />}
+      {loading ? <div className="rounded-2xl bg-white p-10 text-center text-sm text-slate-500">Loading workspace…</div> : isAdmin ? <AdminContent section={section} stats={stats} users={users} auditLogs={auditLogs} /> : <DoctorContent section={section} patients={patients} appointments={appointments} connections={connections} onConnectionUpdate={(id, action) => { void collaborationService.updateConnection(id, action).then((result) => setConnections((items) => items.map((item) => item.id === id ? result.connection : item))).catch(() => setError('Unable to update this connection request.')); }} />}
     </main>
   );
 }
@@ -90,7 +94,8 @@ function AdminContent({ section, stats, users, auditLogs }: { section: string; s
   return <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">{cards.map(([label, value, Icon]) => <div key={label} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"><Icon className="h-5 w-5 text-purple-600" /><p className="mt-4 text-2xl font-bold text-navy-950">{value}</p><p className="text-sm text-slate-500">{label}</p></div>)}</div>;
 }
 
-function DoctorContent({ section, patients, appointments }: { section: string; patients: DoctorPatientItem[]; appointments: Appointment[] }) {
+function DoctorContent({ section, patients, appointments, connections, onConnectionUpdate }: { section: string; patients: DoctorPatientItem[]; appointments: Appointment[]; connections: CareConnection[]; onConnectionUpdate: (id: number, action: 'accept' | 'decline') => void }) {
+  if (section === 'connections') return <div className="space-y-4">{connections.length === 0 ? <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-12 text-center text-sm text-slate-500">No connection requests yet.</div> : connections.map((connection) => <div key={connection.id} className="flex flex-col justify-between gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:flex-row sm:items-center"><div><p className="font-bold text-navy-950">{connection.mother_name || 'Mother'}</p><p className="mt-1 text-sm text-slate-500">Request status: <span className="font-semibold capitalize">{connection.status}</span></p></div>{connection.status === 'pending' && <div className="flex gap-2"><button type="button" onClick={() => onConnectionUpdate(connection.id, 'accept')} className="inline-flex items-center gap-1 rounded-lg bg-teal-600 px-3 py-2 text-xs font-bold text-white"><Check className="h-4 w-4" /> Accept</button><button type="button" onClick={() => onConnectionUpdate(connection.id, 'decline')} className="inline-flex items-center gap-1 rounded-lg border border-rose-200 px-3 py-2 text-xs font-bold text-rose-700"><X className="h-4 w-4" /> Decline</button></div>}</div>)}</div>;
   if (section === 'appointments') return <Table headers={['Patient', 'When', 'Mode', 'Status', 'Action']} rows={appointments.map((appointment) => [appointment.mother_name || 'Patient', formatDate(appointment.start_time), appointment.consultation_mode, appointment.status, appointment.status === 'requested' ? 'Confirm or decline in record' : '—'])} empty="No appointment requests found." />;
   if (section === 'follow-ups') return <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center"><CalendarCheck className="mx-auto h-10 w-10 text-teal-600" /><h2 className="mt-3 text-lg font-bold">Follow-up scheduling</h2><p className="mt-2 text-sm text-slate-500">Select a patient from the directory to coordinate their next appointment.</p><Link to="/doctor/patients" className="mt-5 inline-block rounded-xl bg-teal-600 px-4 py-2 text-sm font-bold text-white">Open patients</Link></div>;
   return <Table headers={['Patient', 'Weeks postpartum', 'Latest screening', 'Status', 'Last updated']} rows={patients.map((patient) => [patient.full_name, String(patient.weeks_postpartum), patient.latest_assessment ? `${patient.latest_assessment.score} (${patient.latest_assessment.category})` : 'Not screened', patient.clinical_status.replace('_', ' '), formatDate(patient.latest_assessment?.created_at)])} empty="No assigned patients found." />;

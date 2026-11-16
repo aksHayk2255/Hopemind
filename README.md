@@ -74,10 +74,10 @@ python backend\seed.py
 python backend\run.py
 ```
 
-The API runs at `http://127.0.0.1:5000`. Verify it with:
+The API runs at `http://127.0.0.1:5001`. Verify it with:
 
 ```powershell
-curl http://127.0.0.1:5000/api/health
+curl http://127.0.0.1:5001/api/health
 ```
 
 ### 3. Start the frontend
@@ -90,9 +90,9 @@ npm install
 npm run dev
 ```
 
-Open `http://127.0.0.1:5173`.
+Open `http://127.0.0.1:5174`.
 
-The Vite development server proxies `/api` requests to the backend at port `5000`. Start the backend before testing login, screening, mood, or chat features.
+The Vite development server proxies `/api` requests to the backend at port `5001`. Start the backend before testing login, screening, mood, or chat features. Set `VITE_API_PROXY_TARGET` or `VITE_DEV_PORT` if you need to use other ports.
 
 ## Demo accounts
 

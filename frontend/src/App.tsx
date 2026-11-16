@@ -19,6 +19,15 @@ import { PrivacySettings } from './components/mother/PrivacySettings';
 import { StaffDashboard } from './components/staff/StaffDashboard';
 import { CareTeam } from './components/mother/CareTeam';
 import { Appointments } from './components/mother/Appointments';
+import { WeeklyWellnessReport } from './components/mother/WeeklyWellnessReport';
+
+function WeeklyReportPage() {
+  return (
+    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-fadeIn">
+      <WeeklyWellnessReport />
+    </div>
+  );
+}
 
 function Home() {
   const { user } = useAuth();
@@ -81,6 +90,7 @@ function AppShell() {
         <Route path="/mother/history" element={<ProtectedRoute allowedRoles={['mother']}><AssessmentHistory /></ProtectedRoute>} />
         <Route path="/mother/mood" element={<ProtectedRoute allowedRoles={['mother']}><MoodLogger /></ProtectedRoute>} />
         <Route path="/mother/trends" element={<ProtectedRoute allowedRoles={['mother']}><MoodTrends /></ProtectedRoute>} />
+        <Route path="/mother/report" element={<ProtectedRoute allowedRoles={['mother']}><WeeklyReportPage /></ProtectedRoute>} />
         <Route path="/mother/chat" element={<ProtectedRoute allowedRoles={['mother']}><HopeBotChat onOpenEmergency={openEmergency} /></ProtectedRoute>} />
         <Route path="/mother/settings" element={<ProtectedRoute allowedRoles={['mother']}><PrivacySettings /></ProtectedRoute>} />
         <Route path="/mother/care-team" element={<ProtectedRoute allowedRoles={['mother']}><CareTeam /></ProtectedRoute>} />

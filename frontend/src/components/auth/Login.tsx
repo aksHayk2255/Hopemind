@@ -40,7 +40,7 @@ export const Login: React.FC = () => {
       else if (loggedUser.role === 'doctor') navigate('/doctor');
       else if (loggedUser.role === 'admin') navigate('/admin');
     } catch (err: any) {
-      setError('Failed to login with demo account');
+      setError(err.response?.data?.message || err.response?.data?.error || 'Unable to reach the HopeMind API');
     } finally {
       setLoading(false);
     }

@@ -66,6 +66,61 @@ def seed_database():
             verified_at=datetime.utcnow(),
         ))
 
+        sample_professionals = [
+            {
+                "email": "demo.counselor@hopemind.example",
+                "name": "Dr. Meera Iyer (Demo)",
+                "specialization": "Perinatal Counseling & CBT",
+                "hospital": "HopeMind Sample Wellness Center",
+                "qualifications": "Demo profile - credentials not for clinical use",
+                "modes": "video,phone",
+                "bio": "Sample counseling profile for testing care-team discovery and consent workflows.",
+            },
+            {
+                "email": "demo.obgyn@hopemind.example",
+                "name": "Dr. Kavita Rao (Demo)",
+                "specialization": "Maternal-Fetal Medicine",
+                "hospital": "HopeMind Sample Women's Clinic",
+                "qualifications": "Demo profile - credentials not for clinical use",
+                "modes": "in_person,video",
+                "bio": "Sample obstetric care profile for testing multidisciplinary postpartum coordination.",
+            },
+            {
+                "email": "demo.socialworker@hopemind.example",
+                "name": "Anita Thomas, LCSW (Demo)",
+                "specialization": "Postpartum Social Work & Family Support",
+                "hospital": "HopeMind Sample Community Care",
+                "qualifications": "Demo profile - credentials not for clinical use",
+                "modes": "phone,video",
+                "bio": "Sample social-work profile for testing family support and referral workflows.",
+            },
+        ]
+        for sample in sample_professionals:
+            sample_user = User(
+                email=sample["email"],
+                full_name=sample["name"],
+                role="doctor",
+                is_active=True,
+            )
+            sample_user.set_password("Password123!")
+            db.session.add(sample_user)
+            db.session.flush()
+            sample_profile = DoctorProfile(
+                user_id=sample_user.id,
+                specialization=sample["specialization"],
+                hospital_affiliation=sample["hospital"],
+                biography=sample["bio"],
+            )
+            db.session.add(sample_profile)
+            db.session.flush()
+            db.session.add(ClinicianVerification(
+                doctor_id=sample_profile.id,
+                status="verified",
+                qualifications=sample["qualifications"],
+                consultation_modes=sample["modes"],
+                verified_at=datetime.utcnow(),
+            ))
+
         # 3. Mother 1: Priya Sharma (Improving postpartum journey)
         mother1_user = User(
             email="priya@example.com",

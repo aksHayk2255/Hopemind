@@ -5,6 +5,7 @@ import {
   Bell,
   CalendarCheck,
   ChevronDown,
+  FileText,
   Heart,
   LogOut,
   Menu,
@@ -30,6 +31,7 @@ const motherLinks = [
   { to: '/mother', label: 'Dashboard', icon: Activity },
   { to: '/mother/assessment', label: 'Screening', icon: Heart },
   { to: '/mother/mood', label: 'Mood & Wellness', icon: Smile },
+  { to: '/mother/report', label: 'Weekly Report', icon: FileText },
   { to: '/mother/care-team', label: 'Care team', icon: Users },
   { to: '/mother/appointments', label: 'Appointments', icon: CalendarCheck },
   { to: '/mother/chat', label: 'HopeBot', icon: MessageCircleHeart },
@@ -294,6 +296,8 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenEmergency }) => {
           <nav aria-label="Clinical navigation" className="hidden items-center gap-1 overflow-x-auto border-t border-slate-100 py-2 md:flex">
             <Link to="/doctor" className={linkClass('/doctor')}><Activity className="h-[17px] w-[17px]" /> Clinical Dashboard</Link>
             <Link to="/doctor/patients" className={linkClass('/doctor/patients')}><Users className="h-[17px] w-[17px]" /> Patient Directory</Link>
+            <Link to="/doctor/connections" className={linkClass('/doctor/connections')}><UserCheck className="h-[17px] w-[17px]" /> Requests</Link>
+            <Link to="/doctor/appointments" className={linkClass('/doctor/appointments')}><CalendarCheck className="h-[17px] w-[17px]" /> Appointments</Link>
             <Link to="/doctor/follow-ups" className={linkClass('/doctor/follow-ups')}><CalendarCheck className="h-[17px] w-[17px]" /> Follow-Ups</Link>
           </nav>
         )}

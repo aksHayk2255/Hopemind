@@ -13,6 +13,8 @@ export interface Professional {
 
 export interface CareConnection {
   id: number;
+  mother_id: number;
+  mother_name?: string;
   doctor_id: number;
   doctor_name: string;
   specialization?: string;

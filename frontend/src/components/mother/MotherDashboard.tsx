@@ -12,13 +12,15 @@ import {
   ArrowRight,
   ShieldCheck,
   CalendarCheck,
-  Baby
+  Baby,
+  FileText
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { assessmentService } from '../../services/assessmentService';
 import { moodService } from '../../services/moodService';
 import { doctorService } from '../../services/doctorService';
 import { AssessmentRecord, MoodEntry } from '../../types';
+import { WeeklyWellnessReport } from './WeeklyWellnessReport';
 
 interface MotherDashboardProps {
   onOpenEmergency: () => void;
@@ -312,7 +314,7 @@ export const MotherDashboard: React.FC<MotherDashboardProps> = ({ onOpenEmergenc
             </div>
           )}
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
             <Link
               to="/mother/history"
               className="p-3 rounded-2xl border border-slate-200 hover:border-lavender-300 hover:bg-lavender-50/30 transition-all flex items-center justify-between"
@@ -331,6 +333,17 @@ export const MotherDashboard: React.FC<MotherDashboardProps> = ({ onOpenEmergenc
               <div className="flex items-center gap-2.5">
                 <TrendingUp className="w-4 h-4 text-teal-600" />
                 <span className="text-xs font-semibold text-slate-800">Longitudinal Charts</span>
+              </div>
+              <ArrowRight className="w-3.5 h-3.5 text-slate-400" />
+            </Link>
+
+            <Link
+              to="/mother/report"
+              className="p-3 rounded-2xl border border-slate-200 hover:border-indigo-300 hover:bg-indigo-50/30 transition-all flex items-center justify-between"
+            >
+              <div className="flex items-center gap-2.5">
+                <FileText className="w-4 h-4 text-[#5b4bdb]" />
+                <span className="text-xs font-semibold text-slate-800">Weekly PDF Report</span>
               </div>
               <ArrowRight className="w-3.5 h-3.5 text-slate-400" />
             </Link>
@@ -370,6 +383,9 @@ export const MotherDashboard: React.FC<MotherDashboardProps> = ({ onOpenEmergenc
           </button>
         </div>
       </div>
+
+      {/* Weekly Wellness Report Section */}
+      <WeeklyWellnessReport />
     </div>
   );
 };

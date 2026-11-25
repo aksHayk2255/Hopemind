@@ -38,6 +38,7 @@ hopemind/
 │   ├── src/context/      Authentication state
 │   ├── src/services/     Typed API clients
 │   └── src/types/        Shared frontend types
+├── mobile/               Flutter Android client
 ├── ml/                   Optional model artifacts and related files
 └── README.md
 ```
@@ -47,6 +48,7 @@ hopemind/
 - Python 3.10 or newer
 - Node.js 20 or newer
 - npm
+- Flutter 3.22 or newer and Android SDK (for the Android client)
 
 ## Quick start
 
@@ -94,6 +96,37 @@ Open `http://127.0.0.1:5174`.
 
 The Vite development server proxies `/api` requests to the backend at port `5001`. Start the backend before testing login, screening, mood, or chat features. Set `VITE_API_PROXY_TARGET` or `VITE_DEV_PORT` if you need to use other ports.
 
+### Android app (Flutter)
+
+The Flutter client is in `mobile\` and uses the same Flask API, JWT accounts, and database as the web app. It does not run a separate backend. From the repository root, generate the Android platform project and launch it on an emulator:
+
+```powershell
+cd mobile
+flutter create --platforms android .
+flutter pub get
+flutter run --dart-define=API_BASE_URL=http://10.0.2.2:5001/api
+```
+
+`10.0.2.2` routes from the Android emulator to the development machine. For a physical device, use the machine's LAN address and ensure the backend is reachable from that device:
+
+```powershell
+flutter run --dart-define=API_BASE_URL=http://192.168.1.10:5001/api
+```
+
+The Android project allows cleartext HTTP only in debug builds; release builds should use HTTPS. The release API URL can be supplied the same way:
+
+```powershell
+flutter build apk --release --dart-define=API_BASE_URL=https://api.example.com/api
+```
+
+The Android client includes:
+
+- Mother, doctor, and administrator sign-in, registration where supported, secure JWT session persistence, and logout.
+- Mother dashboard, 10-question EPDS screening and results, screening history, mood/sleep/journal check-ins, 7/14/30-day trends, and HopeBot conversations with crisis escalation.
+- Verified clinician search, care-team connection requests, per-category data-sharing consent, appointment requests, weekly report preview/PDF sharing, privacy controls, profile/password updates, notifications, and emergency helplines.
+- Doctor patient directory and detail, consent-aware assessment and mood history, connection request review, appointments, follow-up scheduling and updates, clinical notes, and referrals.
+- Administrator platform statistics, searchable user directory and account activation controls, audit logs, and model metadata.
+
 ## Demo accounts
 
 The seeded database contains these local demo accounts:
@@ -129,14 +162,16 @@ These credentials are for local development only. Never use them in a deployed e
 The API is mounted under `/api`:
 
 - `/api/auth` - registration, login, and password actions
-- `/api/assessment` - screening questions, submissions, and history
-- `/api/mood` - mood entries and summaries
+- `/api/assessments` - screening questions, submissions, and history
+- `/api/moods` - mood entries and summaries
 - `/api/chat` - conversations and messages
 - `/api/doctor` - doctor dashboard and patient data
 - `/api/admin` - administration and audit data
 - `/api/ml` - research risk-estimate endpoint
 - `/api/user` - profile and privacy settings
 - `/api/notifications` - user notifications
+- `/api/collaboration` - care connections, consent, appointments, notes, and referrals
+- `/api/reports` - weekly wellness report preview, download, and sharing
 - `/api/health` - service health check
 
 Protected requests use a JWT bearer token. The frontend API client adds the token automatically after login.
